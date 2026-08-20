@@ -31,10 +31,16 @@ Clear is $O(1)$ (does not drop elements).")
   (doc with-capacity "creates a new SparseSet with the specified initial capacity.")
   (defn with-capacity [cap]
     (let [c (if (< cap 1) 1 cap)
-          sparse (Array.allocate c)]
+          sparse (Array.allocate c)
+          dense (Array.allocate c)
+          data (Array.allocate c)]
       (do
-        (for [i 0 c] (Array.aset-uninitialized! &sparse i -1))
-        (SparseSet.init sparse (Array.allocate c) (Array.allocate c) 0))))
+        (for [i 0 c]
+          (do
+            (Array.aset-uninitialized! &sparse i -1)
+            (Array.aset-uninitialized! &dense i -1)
+            (Array.aset-uninitialized! &data i (zero))))
+        (SparseSet.init sparse dense data 0))))
 
   (doc new "creates a new, empty SparseSet with an initial capacity of 8.")
   (defn new []
