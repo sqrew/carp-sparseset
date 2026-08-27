@@ -29,24 +29,10 @@ Add this to your project by loading `sparse_set.carp`.
 (use SparseSet)
 ```
 
-## Usage
 
-```clojure
-(use SparseSet)
+## Examples
 
-(let [set (SparseSet.with-capacity 100)]
-  (do
-    (SparseSet.insert! &set 42)
-    (SparseSet.insert! &set 10)
-    (IO.println &(str (SparseSet.contains? &set 42))) ; true
-    
-    ;; Efficient contiguous iteration
-    (SparseSet.doall &(fn [id] (IO.println &(str @id))) &set)
-    
-    (SparseSet.remove! &set 42)
-    (IO.println &(str (SparseSet.contains? &set 42))))) ; false
-```
-
+See [examples.md](examples.md) for usage examples.
 ## Running Tests
 
 ```bash
