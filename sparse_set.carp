@@ -2,7 +2,8 @@
 (use Uint32)
 (use Maybe)
 
-(doc SparseSet "is a high-performance collection that maps integer IDs to values.
+(doc SparseSet
+  "is a high-performance collection that maps integer IDs to values.
 It provides $O(1)$ lookup, insertion, and deletion while maintaining contiguous 
 storage for cache-friendly iteration.
 
@@ -15,20 +16,17 @@ storage for cache-friendly iteration.
 ### Performance
 Insertion, deletion, and lookup are all $O(1)$. 
 Clear is $O(1)$ (does not drop elements).")
-(deftype (SparseSet t) [
-  sparse (Array Int)
-  dense (Array Int)
-  data (Array t)
-  count Int
-])
+(deftype (SparseSet t)
+  [sparse (Array Int)
+   dense (Array Int)
+   data (Array t)
+   count Int])
 
 (defmodule SparseSet
-  (defn- panic! [msg]
-    (do
-      (IO.println &(str* "Error: " msg))
-      (System.exit 1)))
+  (defn- panic! [msg] (do (IO.println &(str* "Error: " msg)) (System.exit 1)))
 
-  (doc with-capacity "creates a new SparseSet with the specified initial capacity.")
+  (doc with-capacity
+    "creates a new SparseSet with the specified initial capacity.")
   (defn with-capacity [cap]
     (let [c (if (< cap 1) 1 cap)
           sparse (Array.allocate c)
@@ -43,30 +41,27 @@ Clear is $O(1)$ (does not drop elements).")
         (SparseSet.init sparse dense data 0))))
 
   (doc new "creates a new, empty SparseSet with an initial capacity of 8.")
-  (defn new []
-    (SparseSet.with-capacity 8))
+  (defn new [] (SparseSet.with-capacity 8))
 
   (doc zero "returns an empty SparseSet instance.")
-  (defn zero []
-    (SparseSet.new))
+  (defn zero [] (SparseSet.new))
   (implements zero SparseSet.zero)
 
-  (doc length "returns the number of active elements in the set. $O(1)$ complexity.")
-  (defn length [s]
-    @(SparseSet.count s))
+  (doc length
+    "returns the number of active elements in the set. $O(1)$ complexity.")
+  (defn length [s] @(SparseSet.count s))
   (implements count SparseSet.length)
 
-  (doc capacity "returns the current capacity of the dense storage. $O(1)$ complexity.")
-  (defn capacity [s]
-    (Array.length (SparseSet.dense s)))
+  (doc capacity
+    "returns the current capacity of the dense storage. $O(1)$ complexity.")
+  (defn capacity [s] (Array.length (SparseSet.dense s)))
 
-  (doc sparse-capacity "returns the current maximum ID supported by the sparse array.")
-  (defn sparse-capacity [s]
-    (Array.length (SparseSet.sparse s)))
+  (doc sparse-capacity
+    "returns the current maximum ID supported by the sparse array.")
+  (defn sparse-capacity [s] (Array.length (SparseSet.sparse s)))
 
   (doc empty? "checks if the set is empty.")
-  (defn empty? [s]
-    (= @(SparseSet.count s) 0))
+  (defn empty? [s] (= @(SparseSet.count s) 0))
   (implements empty? SparseSet.empty?)
 
   (doc contains? "checks if the set contains the given ID. $O(1)$ complexity.")
@@ -84,10 +79,11 @@ Clear is $O(1)$ (does not drop elements).")
     (let [current (Array.length (SparseSet.sparse s))]
       (when (>= id-idx current)
         (let [suggested-cap (if (= current 0) (inc id-idx) (* current 2))
-              new-cap (if (> (inc id-idx) suggested-cap) (inc id-idx) suggested-cap)
+              new-cap (if (> (inc id-idx) suggested-cap)
+                (inc id-idx)
+                suggested-cap)
               sparse (SparseSet.sparse s)]
-          (for [i current new-cap]
-            (Array.push-back! sparse -1))))))
+          (for [i current new-cap] (Array.push-back! sparse -1))))))
 
   (defn- ensure-dense-capacity! [s]
     (let [current (Array.length (SparseSet.dense s))
@@ -102,7 +98,8 @@ Clear is $O(1)$ (does not drop elements).")
                 (Array.push-back! dense -1)
                 (ignore (Array.push-back! data (zero))))))))))
 
-  (doc insert! "inserts a value at the specified ID. Overwrites if the ID already exists. $O(1)$ amortized.")
+  (doc insert!
+    "inserts a value at the specified ID. Overwrites if the ID already exists. $O(1)$ amortized.")
   (defn insert! [s id val]
     (let [id-idx (Long.to-int (Uint32.to-long id))]
       (do
@@ -112,7 +109,9 @@ Clear is $O(1)$ (does not drop elements).")
               data (SparseSet.data s)
               count @(SparseSet.count s)
               dense-idx @(Array.unsafe-nth sparse id-idx)]
-          (if (and (>= dense-idx 0) (< dense-idx count) (= @(Array.unsafe-nth dense dense-idx) id-idx))
+          (if (and (>= dense-idx 0)
+                   (< dense-idx count)
+                   (= @(Array.unsafe-nth dense dense-idx) id-idx))
             ;; Update existing
             (Array.aset! data dense-idx val)
             ;; Insert new
@@ -135,7 +134,9 @@ Clear is $O(1)$ (does not drop elements).")
               dense (SparseSet.dense s)
               data (SparseSet.data s)
               count @(SparseSet.count s)]
-          (if (and (>= dense-idx 0) (< dense-idx count) (= @(Array.unsafe-nth dense dense-idx) id-idx))
+          (if (and (>= dense-idx 0)
+                   (< dense-idx count)
+                   (= @(Array.unsafe-nth dense dense-idx) id-idx))
             ;; Swap with last
             (let [last-idx (dec count)
                   last-id @(Array.unsafe-nth dense last-idx)]
@@ -160,7 +161,9 @@ Clear is $O(1)$ (does not drop elements).")
         (let [dense-idx @(Array.unsafe-nth sparse id-idx)
               dense (SparseSet.dense s)
               count @(SparseSet.count s)]
-          (if (and (>= dense-idx 0) (< dense-idx count) (= @(Array.unsafe-nth dense dense-idx) id-idx))
+          (if (and (>= dense-idx 0)
+                   (< dense-idx count)
+                   (= @(Array.unsafe-nth dense dense-idx) id-idx))
             (Maybe.Just @(Array.unsafe-nth (SparseSet.data s) dense-idx))
             (Maybe.Nothing))))))
 
@@ -173,37 +176,34 @@ Clear is $O(1)$ (does not drop elements).")
         (let [dense-idx @(Array.unsafe-nth sparse id-idx)
               dense (SparseSet.dense s)
               count @(SparseSet.count s)]
-          (if (and (>= dense-idx 0) (< dense-idx count) (= @(Array.unsafe-nth dense dense-idx) id-idx))
-            (Maybe.Just (Pointer.address (Array.unsafe-nth (SparseSet.data s) dense-idx)))
+          (if (and (>= dense-idx 0)
+                   (< dense-idx count)
+                   (= @(Array.unsafe-nth dense dense-idx) id-idx))
+            (Maybe.Just
+              (Pointer.address (Array.unsafe-nth (SparseSet.data s) dense-idx)))
             (Maybe.Nothing))))))
 
   (doc clear! "removes all elements from the set. $O(1)$ complexity. 
 Note: Elements are NOT dropped. Reusing the set will eventually overwrite them.")
-  (defn clear! [s]
-    (SparseSet.set-count! s 0))
+  (defn clear! [s] (SparseSet.set-count! s 0))
 
-  (doc with-ptr "executes a function f with a pointer to the value at the given ID.")
+  (doc with-ptr
+    "executes a function f with a pointer to the value at the given ID.")
   (defn with-ptr [s id f]
-    (match (SparseSet.get-ptr s id)
-      (Maybe.Just ptr) (~f ptr)
-      (Maybe.Nothing) ()))
+    (match (SparseSet.get-ptr s id) (Maybe.Just ptr) (~f ptr) (Maybe.Nothing) ()))
 
   (doc for-each "iterates over all active elements in the set.")
   (defn for-each [f s]
     (let [data (SparseSet.data s)
           len @(SparseSet.count s)]
-      (for [i 0 len]
-        (~f (Array.unsafe-nth data i)))))
+      (for [i 0 len] (~f (Array.unsafe-nth data i)))))
 
   (doc reduce "reduces the active elements in the set to a single value.")
   (defn reduce [f acc s]
     (let [data (SparseSet.data s)
           len @(SparseSet.count s)
           res acc]
-      (do
-        (for [i 0 len]
-          (set! res (~f res (Array.unsafe-nth data i))))
-        res)))
+      (do (for [i 0 len] (set! res (~f res (Array.unsafe-nth data i)))) res)))
 
   (doc any? "checks if any active element in the set satisfies the predicate.")
   (defn any? [f s]
@@ -212,8 +212,7 @@ Note: Elements are NOT dropped. Reusing the set will eventually overwrite them."
           res false]
       (do
         (for [i 0 len]
-          (when (~f (Array.unsafe-nth data i))
-            (do (set! res true) (break))))
+          (when (~f (Array.unsafe-nth data i)) (do (set! res true) (break))))
         res)))
 
   (doc all? "checks if all active elements in the set satisfy the predicate.")
@@ -223,15 +222,15 @@ Note: Elements are NOT dropped. Reusing the set will eventually overwrite them."
           res true]
       (do
         (for [i 0 len]
-          (unless (~f (Array.unsafe-nth data i))
-            (do (set! res false) (break))))
+          (unless (~f (Array.unsafe-nth data i)) (do (set! res false) (break))))
         res)))
-
 
   (doc id-at-idx "returns the ID at the specified dense index.")
   (defn id-at-idx [s idx]
     (if (and (>= idx 0) (< idx @(SparseSet.count s)))
-      (Maybe.Just (Uint32.from-long (Long.from-int @(Array.unsafe-nth (SparseSet.dense s) idx))))
+      (Maybe.Just
+        (Uint32.from-long
+          (Long.from-int @(Array.unsafe-nth (SparseSet.dense s) idx))))
       (Maybe.Nothing)))
 
   (doc value-at-idx "returns a copy of the value at the specified dense index.")
@@ -240,7 +239,8 @@ Note: Elements are NOT dropped. Reusing the set will eventually overwrite them."
       (Maybe.Just @(Array.unsafe-nth (SparseSet.data s) idx))
       (Maybe.Nothing)))
 
-  (doc value-ptr-at-idx "returns a pointer to the value at the specified dense index.")
+  (doc value-ptr-at-idx
+    "returns a pointer to the value at the specified dense index.")
   (defn value-ptr-at-idx [s idx]
     (if (and (>= idx 0) (< idx @(SparseSet.count s)))
       (Maybe.Just (Pointer.address (Array.unsafe-nth (SparseSet.data s) idx)))
@@ -248,6 +248,9 @@ Note: Elements are NOT dropped. Reusing the set will eventually overwrite them."
 
   (doc str "returns a string representation of the set.")
   (defn str [s]
-    (str* "SparseSet(len: " (Int.str @(SparseSet.count s)) ", cap: " (Int.str (SparseSet.capacity s)) ")"))
-  (implements str SparseSet.str)
-)
+    (str* "SparseSet(len: "
+          (Int.str @(SparseSet.count s))
+          ", cap: "
+          (Int.str (SparseSet.capacity s))
+          ")"))
+  (implements str SparseSet.str))
